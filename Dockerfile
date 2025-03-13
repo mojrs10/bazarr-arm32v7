@@ -5,7 +5,8 @@ FROM mojrapid/unrar:arm32v7-6.2.10 as unrar
 # FROM mojrapid/baseimage:alpine-3.17_s6_full
 # FROM mojrapid/alpine:3.18_s6_transmission-arm32v7
 # FROM mojrapid/baseimage:alpine-3.18_s6_full
-FROM mojrapid/baseimage:alpine-3.19_s6_full
+# FROM mojrapid/baseimage:alpine-3.19_s6_full - ovaj se inače koristi u orginalu
+FROM mojrapid/baseimage:alpine-3.20_s6_full
 # FROM mojrapid/baseimage:alpine-edge_s6_full
 
 # set version label
