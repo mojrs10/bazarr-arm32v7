@@ -24,6 +24,12 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # Postavljanje QEMU za podršku ARM arhitekturama
+      - name: Set up QEMU for ARM architecture
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm
+
       # Instalacija potrebnih paketa (npr. util-linux)
       - name: Install missing utilities
         run: |
