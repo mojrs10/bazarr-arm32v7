@@ -8,7 +8,7 @@ git config --global user.email "actions@github.com"
 
 echo "🔧 Postavljam prava na izvršavanje za potrebne fajlove..."
 
-# Promijenjeno iz 'radarr' u 'sonarr'
+# Promijenjeno u bazarr
 chmod 755 root/donate.txt
 chmod 755 root/etc/s6-overlay/s6-rc.d/init-bazarr-config/run
 chmod 755 root/etc/s6-overlay/s6-rc.d/svc-bazarr/run
