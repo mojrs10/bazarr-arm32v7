@@ -24,6 +24,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v3
 
+      # Instalacija potrebnih paketa (npr. util-linux)
+      - name: Install missing utilities
+        run: |
+          sudo apt-get update && sudo apt-get install -y util-linux
+
       # Pokretanje skripte za postavljanje prava na izvršavanje
       - name: Run fix-permissions.sh
         run: |
