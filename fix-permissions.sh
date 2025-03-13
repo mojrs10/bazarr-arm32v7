@@ -12,12 +12,12 @@ echo "🔧 Postavljam prava na izvršavanje za potrebne fajlove..."
 chmod 755 root/donate.txt
 chmod 755 root/etc/s6-overlay/s6-rc.d/init-bazarr-config/run
 chmod 755 root/etc/s6-overlay/s6-rc.d/svc-bazarr/run
-chmod 755 root/etc/s6-overlay/s6-rc.d/svc-bazarr/data/check
+# chmod 755 root/etc/s6-overlay/s6-rc.d/svc-bazarr/data/check
 
 git add root/donate.txt
 git add root/etc/s6-overlay/s6-rc.d/init-bazarr-config/run
 git add root/etc/s6-overlay/s6-rc.d/svc-bazarr/run
-git add root/etc/s6-overlay/s6-rc.d/svc-bazarr/data/check
+# git add root/etc/s6-overlay/s6-rc.d/svc-bazarr/data/check
 
 # Provjeri je li bilo promjena
 if ! git diff-index --quiet HEAD --; then
