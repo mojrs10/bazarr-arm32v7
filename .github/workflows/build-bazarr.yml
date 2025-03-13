@@ -1,0 +1,99 @@
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  discussions: write
+
+name: Auto Build Bazarr
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'  # svakodnevno u 05:00 UTC
+
+env:
+  PLATFORM: linux/arm/v7
+  IMAGE_NAME: mojrapid/bazarr
+  ARCH_TAG: arm32v7
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout koda iz repozitorija
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      # Pokretanje skripte za postavljanje prava na izvršavanje
+      - name: Run fix-permissions.sh
+        run: |
+          bash ./fix-permissions.sh
+
+      # Preuzimanje najnovije verzije Bazarr-a s GitHub API-ja
+      - name: Get latest Bazarr version from GitHub
+        id: get_version
+        run: |
+          version=$(curl -s https://api.github.com/repos/morpheus65535/bazarr/releases/latest | jq -r '.tag_name')
+          if [ -z "$version" ]; then
+            echo "Failed to fetch Bazarr version."
+            exit 1
+          fi
+          echo "Bazarr version fetched: $version"
+          echo "BAZARR_VERSION=$version" >> $GITHUB_ENV
+          echo "version=$version" >> $GITHUB_OUTPUT
+
+      # Postavljanje Docker Buildx s verzijom
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+        with:
+          version: v0.10.0
+
+      # Login na Docker Hub
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # Provjera verzije na Docker Hub-u
+      - name: Check if image already exists
+        id: check_image
+        run: |
+          image_tag="${{ env.IMAGE_NAME }}:${{ env.ARCH_TAG }}-${{ env.BAZARR_VERSION }}"
+          image_exists=$(docker manifest inspect $image_tag || echo "not found")
+          if [[ $image_exists == *"not found"* ]]; then
+            echo "Image not found. Proceeding with build."
+            echo "image_exists=false" >> $GITHUB_ENV
+          else
+            echo "Image found. Skipping build."
+            echo "image_exists=true" >> $GITHUB_ENV
+          fi
+
+      # Buildanje i pushanje Docker image-a
+      - name: Build and Push Docker image
+        if: env.image_exists == 'false'
+        uses: docker/build-push-action@v5
+        with:
+          context: ./  # Koristi root direktorij za build
+          file: ./Dockerfile  # Putanja do Dockerfile-a u repozitoriju
+          push: true
+          platforms: ${{ env.PLATFORM }}
+          build-args: |
+            BUILD_DATE=${{ github.event.head_commit.timestamp }}
+            BAZARR_VERSION=${{ env.BAZARR_VERSION }}
+            VERSION=${{ env.BAZARR_VERSION }}
+          tags: |
+            ${{ env.IMAGE_NAME }}:${{ env.ARCH_TAG }}-${{ env.BAZARR_VERSION }}
+            ${{ env.IMAGE_NAME }}:${{ env.ARCH_TAG }}-latest
+
+      # Obavijest na Discord nakon uspješnog builda
+      - name: Send Discord notification on success
+        if: env.image_exists == 'false'
+        run: |
+          curl -X POST -H "Content-Type: application/json" -d '{"content": "New Bazarr image version '${{ env.BAZARR_VERSION }}' has been built and pushed to Docker Hub."}' ${{ secrets.DISCORD_WEBHOOK }}
+
+      # Obavijest na Discord ako build ne uspije
+      - name: Send Discord notification on failure
+        if: failure()
+        run: |
+          curl -X POST -H "Content-Type: application/json" -d '{"content": "Build failed for Bazarr image version '${{ env.BAZARR_VERSION }}'. Please check the build logs."}' ${{ secrets.DISCORD_WEBHOOK }}
