@@ -51,7 +51,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
         with:
-          version: v0.10.0
+          version: v0.14.0
 
       # Login na Docker Hub
       - name: Login to Docker Hub
